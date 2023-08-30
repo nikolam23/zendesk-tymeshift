@@ -1,26 +1,30 @@
 <?php
+declare(strict_types=1);
 
 namespace Tymeshift\PhpTest\Domains\Schedule;
 
-use Tymeshift\PhpTest\Domains\Schedule\ScheduleStorage;
-use Tymeshift\PhpTest\Interfaces\EntityInterface;
+use Tymeshift\PhpTest\Interfaces\CollectionInterface;
 use Tymeshift\PhpTest\Interfaces\FactoryInterface;
+use Tymeshift\PhpTest\Interfaces\RepositoryInterface;
+use Tymeshift\PhpTest\Interfaces\StorageInterface;
 
-class ScheduleRepository
+final class ScheduleRepository implements RepositoryInterface
 {
-    private $storage;
-
-    private $factory;
-
-    public function __construct(ScheduleStorage $storage, FactoryInterface $factory)
+    public function __construct(private StorageInterface $storage, private FactoryInterface $factory)
     {
-        $this->storage = $storage;
-        $this->factory = $factory;
     }
 
-    public function getById(int $id):EntityInterface
+    public function getById(int $id): ScheduleEntityInterface
     {
         $data = $this->storage->getById($id);
+
         return $this->factory->createEntity($data);
+    }
+
+    public function getByIds(array $ids): CollectionInterface
+    {
+        $data = $this->storage->getByIds($ids);
+
+        return $this->factory->createCollection($data);
     }
 }

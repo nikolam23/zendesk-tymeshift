@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Tymeshift\PhpTest\Base;
 
@@ -16,11 +17,10 @@ use Tymeshift\PhpTest\Interfaces\FactoryInterface;
 abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAccess, JsonSerializable, CollectionInterface
 {
     /** @var EntityInterface[] */
-    protected $items = [];
+    protected array $items = [];
 
     /**
-     * BaseCollection constructor.
-     * @param array $data
+     * @throws InvalidCollectionDataProvidedException
      */
     public function __construct(array $data = [])
     {
@@ -33,20 +33,13 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         }
     }
 
-    /**
-     * @param EntityInterface $entity
-     * @return BaseCollection
-     */
-    public function add(EntityInterface $entity):CollectionInterface
+    public function add(EntityInterface $entity): CollectionInterface
     {
         $this->items[] = $entity;
         return $this;
     }
 
     /**
-     * @param array $data
-     * @param FactoryInterface $factory
-     * @return BaseCollection
      * @throws InvalidCollectionDataProvidedException
      * @see buildFromArray
      */
@@ -63,10 +56,7 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function toArray():array
+    public function toArray(): array
     {
         $result = [];
 
@@ -77,7 +67,7 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return $result;
     }
 
-    public function toJson($options = 0)
+    public function toJson($options = 0): bool|string
     {
         return json_encode($this->toArray(), $options);
     }
@@ -85,11 +75,8 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     /**
      * Searches for an element. $key will be transformed into getKey method and result of it will be compared to value
      * Comparison is strict
-     * @param mixed $key
-     * @param bool $value
-     * @return mixed
      */
-    public function search($key, $value)
+    public function search(mixed $key, bool $value): ?EntityInterface
     {
         foreach ($this->items as $item) {
             if ($item->{'get' . $key}() === $value) {
@@ -102,11 +89,8 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
 
     /**
      * Remove item from collection
-     * @param string $key
-     * @param mixed $value
-     * @return bool|null
      */
-    public function remove($key, $value)
+    public function remove(string $key, mixed $value): ?bool
     {
         foreach ($this->items as $index => $item) {
             if ($item->{'get' . $key}() === $value) {
@@ -118,11 +102,9 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     }
 
     /**
-     * @param callable $callback
-     * @return $this
      * @throws InvalidCollectionDataProvidedException
      */
-    public function map(callable $callback)
+    public function map(callable $callback): static
     {
         $keys = array_keys($this->items);
 
@@ -136,11 +118,9 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     }
 
     /**
-     * @param callable $callback
-     * @return $this
      * @throws InvalidCollectionDataProvidedException
      */
-    public function filter(callable $callback)
+    public function filter(callable $callback): static
     {
         $newItems = [];
         foreach ($this->items as $value) {
@@ -153,42 +133,28 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return new static($newItems);
     }
 
-    //phpcs: enable
-
-    /**
-     * @return ArrayIterator|Traversable
-     */
-    public function getIterator()
+    public function getIterator(): Traversable|ArrayIterator
     {
         return new ArrayIterator($this->items);
     }
 
-    /**
-     * @return int
-     */
-    public function count()
+    public function count(): int
     {
         return count($this->items);
     }
 
     /**
      * Determine if an item exists at an offset.
-     *
-     * @param mixed $key
-     * @return bool
      */
-    public function offsetExists($key)
+    public function offsetExists(mixed $key): bool
     {
         return array_key_exists($key, $this->items);
     }
 
     /**
      * Get an item at a given offset.
-     *
-     * @param mixed $key
-     * @return mixed
      */
-    public function offsetGet($key)
+    public function offsetGet(mixed $key): EntityInterface
     {
         return $this->items[$key];
     }
@@ -196,12 +162,9 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     /**
      * Set the item at a given offset.
      *
-     * @param mixed $key
-     * @param mixed $value
-     * @return void
      * @throws InvalidCollectionDataProvidedException
      */
-    public function offsetSet($key, $value)
+    public function offsetSet(mixed $key, mixed $value): void
     {
         if (!$this->isEntity($value)) {
             throw new InvalidCollectionDataProvidedException();
@@ -215,39 +178,24 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
 
     /**
      * Unset the item at a given offset.
-     *
-     * @param string $key
-     * @return void
      */
-    public function offsetUnset($key)
+    public function offsetUnset(mixed $key): void
     {
         unset($this->items[$key]);
     }
 
-    /**
-     * @param $item
-     * @return bool
-     */
-    protected function isEntity($item)
+    protected function isEntity(mixed $item): bool
     {
         return ($item instanceof EntityInterface);
     }
 
-    /**
-     * @return array|mixed
-     */
-    // phpcs:disable TymeshiftCodeStandard.Classes.EachMethodMustHaveReturnType
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
-    //phpcs:enable
 
     /**
      * Execute a callback over each item.
-     *
-     * @param  callable  $callback
-     * @return $this
      */
     public function each(callable $callback): self
     {
@@ -260,9 +208,6 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     }
 
     /**
-     * @param array $data
-     * @param FactoryInterfaceAlias $factory
-     * @return BaseCollection
      * @throws InvalidCollectionDataProvidedException
      */
     public function buildFromArray(array $data, FactoryInterfaceAlias $factory): self
@@ -278,11 +223,7 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return $this;
     }
 
-    /**
-     * @param mixed $id
-     * @return EntityInterface|null
-     */
-    public function getById($id): ?EntityInterface
+    public function getById(mixed $id): ?EntityInterface
     {
         foreach ($this->items as $entity) {
             if ($entity->getId() == $id) {
@@ -292,10 +233,6 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return null;
     }
 
-    /**
-     * @param string $property
-     * @return array
-     */
     public function pluck(string $property): array
     {
         $data = [];
@@ -306,11 +243,9 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
     }
 
     /**
-     * @param string $property
-     * @return Collection
      * @throws InvalidCollectionDataProvidedException
      */
-    public function getAssoc(string $property = 'id'):Collection
+    public function getAssoc(string $property = 'id'): CollectionInterface
     {
         $items = [];
         foreach ($this->items as $index => $entity) {
@@ -321,9 +256,6 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return new static($items);
     }
 
-    /**
-     * @return array
-     */
     public function getIds(): array
     {
         $result = [];
@@ -333,10 +265,7 @@ abstract class BaseCollection implements IteratorAggregate, Countable, ArrayAcce
         return array_unique($result);
     }
 
-    /**
-     * @return EntityInterface
-     */
-    public function last():EntityInterface
+    public function last(): EntityInterface
     {
         $lastItem = end($this->items);
         reset($this->items);

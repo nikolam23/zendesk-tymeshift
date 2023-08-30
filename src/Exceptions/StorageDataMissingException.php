@@ -3,7 +3,12 @@ declare(strict_types=1);
 
 namespace Tymeshift\PhpTest\Exceptions;
 
-class StorageDataMissingException extends \Exception
+final class StorageDataMissingException extends \Exception
 {
+    private const MESSAGE = 'Storage data not found.';
 
+    public function __construct()
+    {
+        parent::__construct(self::MESSAGE, 500);
+    }
 }

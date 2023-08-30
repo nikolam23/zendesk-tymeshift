@@ -5,7 +5,7 @@ namespace Tymeshift\PhpTest\Interfaces;
 
 interface RepositoryInterface
 {
-    public function getById(int $id):EntityInterface;
+    public function getById(int $id): EntityInterface;
 
-    public function getByIds(array $ids):CollectionInterface;
+    public function getByIds(array $ids): CollectionInterface;
 }
